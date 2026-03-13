@@ -473,7 +473,27 @@ export default function SquadReel() {
     setSelected(null); setScreen("group"); toast$("Deleted");
   };
 
-  const download = item => { const a = document.createElement("a"); a.href = item.src; a.download = item.name || `squadreel-${item.id}`; a.click(); toast$("Saving 📲"); };
+  const download = async item => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      // Try native share sheet first (best iOS experience)
+      if (navigator.share) {
+        try {
+          const res = await fetch(item.src);
+          const blob = await res.blob();
+          const file = new File([blob], item.name || "squadreel.jpg", { type: blob.type });
+          await navigator.share({ files: [file], title: item.name });
+          return;
+        } catch { }
+      }
+      // Fallback: open in new tab so user can long-press save
+      const win = window.open();
+      win.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${item.src}" style="max-width:100%;max-height:100vh;object-fit:contain"/><p style="position:fixed;bottom:20px;left:0;right:0;text-align:center;color:#fff;font-family:sans-serif;font-size:14px">Hold the image → Save to Photos</p></body></html>`);
+      return;
+    }
+    const a = document.createElement("a"); a.href = item.src; a.download = item.name || `squadreel-${item.id}`; a.click();
+    toast$("Saving 📲");
+  };
 
   const togglePin = async mediaId => {
     const pinned = profile.pinned_ids || [];
@@ -557,7 +577,7 @@ export default function SquadReel() {
     setActiveFilter(0); setTextOverlays([]); setStickerOverlays([]); setEditScreen("adjust"); setSelected(item); setScreen("editor");
   };
 
-  const getFilter = (es, fi) => fi > 0 ? FILTERS[fi].fn() : `brightness(${es.brightness}%) contrast(${es.contrast}%) saturate(${es.saturation}%) blur(${es.blur}px) sepia(${es.sepia}%) grayscale(${es.grayscale}%)`;
+  const getFilter = (es, fi) => fi > 0 ? FILTERS[fi].fn() : `brightness(${es.brightness}%) contrast(${es.contrast}%) saturate(${es.saturation}%) blur(${es.blur}px) sepia(${es.sepia}%) grayscale(${es.grayscale}%) hue-rotate(${es.hueRotate || 0}deg) opacity(${es.opacity ?? 100}%)`;
 
   const bakeEdit = () => {
     const canvas = canvasRef.current, img = imgRef.current; if (!canvas || !img) return null;
@@ -1162,13 +1182,22 @@ export default function SquadReel() {
             <div style={{ width: 268, background: BF, borderLeft: "1px solid #1a1a1a", padding: 15, overflowY: "auto", flexShrink: 0 }}>
               {editScreen === "adjust" && <>
                 <div style={{ fontSize: 11, fontWeight: 900, color: ac, letterSpacing: "0.1em", marginBottom: 13 }}>LIGHT & COLOR</div>
-                {[{ key: "brightness", icon: "☀️", label: "Brightness", min: 0, max: 200, step: 1 }, { key: "contrast", icon: "◑", label: "Contrast", min: 0, max: 200, step: 1 }, { key: "saturation", icon: "🎨", label: "Saturation", min: 0, max: 200, step: 1 }, { key: "sepia", icon: "🟫", label: "Warmth", min: 0, max: 100, step: 1 }, { key: "grayscale", icon: "⬛", label: "Grayscale", min: 0, max: 100, step: 1 }, { key: "blur", icon: "💨", label: "Blur", min: 0, max: 10, step: 0.1 }].map(c => (
+                {[
+                  { key: "brightness", icon: "☀️", label: "Brightness", min: 0, max: 200, step: 1 },
+                  { key: "contrast", icon: "◑", label: "Contrast", min: 0, max: 200, step: 1 },
+                  { key: "saturation", icon: "🎨", label: "Saturation", min: 0, max: 200, step: 1 },
+                  { key: "sepia", icon: "🟫", label: "Warmth", min: 0, max: 100, step: 1 },
+                  { key: "grayscale", icon: "⬛", label: "Grayscale", min: 0, max: 100, step: 1 },
+                  { key: "blur", icon: "💨", label: "Blur", min: 0, max: 10, step: 0.1 },
+                  { key: "hueRotate", icon: "🌈", label: "Hue Shift", min: 0, max: 360, step: 1 },
+                  { key: "opacity", icon: "👻", label: "Fade", min: 30, max: 100, step: 1 },
+                ].map(c => (
                   <div key={c.key} style={{ marginBottom: 13 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 12 }}><span style={{ color: "#777" }}>{c.icon} {c.label}</span><span style={{ color: ac, fontWeight: 700, fontSize: 11 }}>{parseFloat(editState[c.key]).toFixed(c.step < 1 ? 1 : 0)}</span></div>
-                    <input type="range" className="slider" min={c.min} max={c.max} step={c.step} value={editState[c.key]} onChange={e => setEditState(s => ({ ...s, [c.key]: parseFloat(e.target.value) }))} />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 12 }}><span style={{ color: "#777" }}>{c.icon} {c.label}</span><span style={{ color: ac, fontWeight: 700, fontSize: 11 }}>{parseFloat(editState[c.key] ?? (c.key === "opacity" ? 100 : 0)).toFixed(c.step < 1 ? 1 : 0)}</span></div>
+                    <input type="range" className="slider" min={c.min} max={c.max} step={c.step} value={editState[c.key] ?? (c.key === "opacity" ? 100 : 0)} onChange={e => setEditState(s => ({ ...s, [c.key]: parseFloat(e.target.value) }))} />
                   </div>
                 ))}
-                <Btn onClick={() => setEditState(s => ({ ...s, brightness: 100, contrast: 100, saturation: 100, blur: 0, sepia: 0, grayscale: 0, rotate: 0, vignette: false, flip: false }))} bg="#111" fg="#555" style={{ width: "100%", fontSize: 12 }}>↺ RESET</Btn>
+                <Btn onClick={() => setEditState(s => ({ ...s, brightness: 100, contrast: 100, saturation: 100, blur: 0, sepia: 0, grayscale: 0, rotate: 0, vignette: false, flip: false, hueRotate: 0, opacity: 100 }))} bg="#111" fg="#555" style={{ width: "100%", fontSize: 12 }}>↺ RESET ALL</Btn>
               </>}
               {editScreen === "filters" && <>
                 <div style={{ fontSize: 11, fontWeight: 900, color: ac, letterSpacing: "0.1em", marginBottom: 12 }}>PRESETS</div>
@@ -1181,10 +1210,74 @@ export default function SquadReel() {
                   ))}
                 </div>
               </>}
+              {editScreen === "text" && <>
+                <div style={{ fontSize: 11, fontWeight: 900, color: ac, letterSpacing: "0.1em", marginBottom: 10 }}>TEXT OVERLAYS</div>
+                <Btn onClick={() => setTextOverlays(prev => [...prev, { id: uid(), text: "YOUR TEXT", x: 50, y: 50, size: 40, color: "#ffffff", bg: true }])} bg={ac} style={{ width: "100%", fontSize: 13, marginBottom: 10 }}>+ ADD TEXT</Btn>
+                {textOverlays.length === 0 && <div style={{ color: "#444", fontSize: 12, fontFamily: FF, textAlign: "center", padding: "14px 0" }}>No text added yet</div>}
+                {textOverlays.map(t => (
+                  <div key={t.id} style={{ background: B1, border: `1px solid ${editingTextId === t.id ? ac : "#1f1f1f"}`, padding: "9px", marginBottom: 7 }}>
+                    <input value={t.text} onChange={e => setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, text: e.target.value } : x))} style={{ width: "100%", background: "#0a0a0a", border: "1px solid #2a2a2a", color: "#fff", padding: "5px 7px", fontSize: 13, outline: "none", fontFamily: FN, letterSpacing: "0.06em", marginBottom: 7 }} />
+                    <div style={{ display: "flex", gap: 4, marginBottom: 7, flexWrap: "wrap" }}>
+                      {["#ffffff", "#ff4d00", "#ffd60a", "#06d6a0", "#00b4d8", "#c77dff", "#000000"].map(c => (
+                        <div key={c} onClick={() => setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, color: c } : x))} style={{ width: 18, height: 18, background: c, borderRadius: "50%", cursor: "pointer", border: `2px solid ${t.color === c ? "#fff" : "transparent"}` }} />
+                      ))}
+                    </div>
+                    {[["SIZE", 16, 80, t.size, "size"], ["X POS", 5, 95, t.x, "x"], ["Y POS", 5, 95, t.y, "y"]].map(([l, mn, mx, val, k]) => (
+                      <div key={k} style={{ display: "flex", gap: 4, alignItems: "center", marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, color: "#555", width: 28 }}>{l}</span>
+                        <input type="range" className="slider" min={mn} max={mx} value={val} onChange={e => setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, [k]: parseInt(e.target.value) } : x))} style={{ flex: 1 }} />
+                        <span style={{ fontSize: 10, color: ac, width: 18, textAlign: "right" }}>{val}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+                      <div onClick={() => setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, bg: !x.bg } : x))} style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer" }}>
+                        <div style={{ width: 24, height: 12, background: t.bg ? ac : "#222", borderRadius: 8, position: "relative" }}><div style={{ position: "absolute", top: 1, left: t.bg ? 12 : 1, width: 10, height: 10, background: "#fff", borderRadius: "50%", transition: "all 0.2s" }} /></div>
+                        <span style={{ fontSize: 10, color: "#666" }}>BG BOX</span>
+                      </div>
+                      <Btn onClick={() => setTextOverlays(prev => prev.filter(x => x.id !== t.id))} bg="#1a1a1a" fg="#c0392b" style={{ fontSize: 10, padding: "3px 9px" }}>REMOVE</Btn>
+                    </div>
+                  </div>
+                ))}
+              </>}
+              {editScreen === "stickers" && <>
+                <div style={{ fontSize: 11, fontWeight: 900, color: ac, letterSpacing: "0.1em", marginBottom: 10 }}>TAP TO ADD</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5, marginBottom: 14 }}>
+                  {STICKERS.map(s => (
+                    <div key={s} onClick={() => setStickerOverlays(prev => [...prev, { id: uid(), emoji: s, x: 50, y: 50, size: 48 }])} className="hov" style={{ background: B1, border: "1px solid #1f1f1f", padding: "6px 0", textAlign: "center", fontSize: 20, cursor: "pointer" }}>{s}</div>
+                  ))}
+                </div>
+                {stickerOverlays.length > 0 && <>
+                  <div style={{ fontSize: 11, color: "#555", letterSpacing: "0.08em", marginBottom: 6 }}>PLACED STICKERS</div>
+                  {stickerOverlays.map(s => (
+                    <div key={s.id} style={{ background: B1, border: "1px solid #1f1f1f", padding: "7px 9px", marginBottom: 5, display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 20 }}>{s.emoji}</span>
+                      <div style={{ flex: 1 }}>
+                        {[["X", s.x, "x"], ["Y", s.y, "y"]].map(([l, v, k]) => (
+                          <div key={k} style={{ display: "flex", gap: 4, alignItems: "center", marginBottom: 3 }}>
+                            <span style={{ fontSize: 10, color: "#555", width: 12 }}>{l}</span>
+                            <input type="range" className="slider" min={5} max={95} value={v} onChange={e => setStickerOverlays(prev => prev.map(x => x.id === s.id ? { ...x, [k]: parseInt(e.target.value) } : x))} style={{ flex: 1 }} />
+                          </div>
+                        ))}
+                      </div>
+                      <Btn onClick={() => setStickerOverlays(prev => prev.filter(x => x.id !== s.id))} bg="#1a1a1a" fg="#c0392b" style={{ fontSize: 10, padding: "3px 7px" }}>✕</Btn>
+                    </div>
+                  ))}
+                </>}
+              </>}
               {editScreen === "crop" && <>
-                <div style={{ fontSize: 11, fontWeight: 900, color: ac, letterSpacing: "0.1em", marginBottom: 10 }}>ROTATE</div>
-                <div style={{ display: "flex", gap: 5, marginBottom: 10 }}>{[0, 90, 180, 270].map(d => <button key={d} className="hov" onClick={() => setEditState(s => ({ ...s, rotate: d }))} style={{ flex: 1, background: editState.rotate === d ? ac : "#1a1a1a", color: editState.rotate === d ? "#fff" : "#666", border: "none", padding: "8px 0", fontSize: 12, fontFamily: FN, cursor: "pointer" }}>{d}°</button>)}</div>
-                <Btn onClick={() => setEditState(s => ({ ...s, rotate: 0, flip: false }))} bg="#111" fg="#555" style={{ width: "100%", fontSize: 12 }}>↺ RESET</Btn>
+                <div style={{ fontSize: 11, fontWeight: 900, color: ac, letterSpacing: "0.1em", marginBottom: 10 }}>ROTATE & FLIP</div>
+                <div style={{ display: "flex", gap: 5, marginBottom: 10 }}>
+                  {[0, 90, 180, 270].map(d => <button key={d} className="hov" onClick={() => setEditState(s => ({ ...s, rotate: d }))} style={{ flex: 1, background: editState.rotate === d ? ac : "#1a1a1a", color: editState.rotate === d ? "#fff" : "#666", border: "none", padding: "8px 0", fontSize: 12, fontFamily: FN, cursor: "pointer" }}>{d}°</button>)}
+                </div>
+                <div onClick={() => setEditState(s => ({ ...s, flip: !s.flip }))} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 11px", background: B1, border: `1px solid ${editState.flip ? ac : "#1f1f1f"}`, cursor: "pointer", marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, color: "#aaa" }}>↔️ Flip Horizontal</span>
+                  <div style={{ width: 28, height: 14, background: editState.flip ? ac : "#222", borderRadius: 8, position: "relative" }}><div style={{ position: "absolute", top: 2, left: editState.flip ? 14 : 2, width: 10, height: 10, background: "#fff", borderRadius: "50%", transition: "all 0.2s" }} /></div>
+                </div>
+                <div onClick={() => setEditState(s => ({ ...s, vignette: !s.vignette }))} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 11px", background: B1, border: `1px solid ${editState.vignette ? ac : "#1f1f1f"}`, cursor: "pointer", marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, color: "#aaa" }}>🌑 Vignette</span>
+                  <div style={{ width: 28, height: 14, background: editState.vignette ? ac : "#222", borderRadius: 8, position: "relative" }}><div style={{ position: "absolute", top: 2, left: editState.vignette ? 14 : 2, width: 10, height: 10, background: "#fff", borderRadius: "50%", transition: "all 0.2s" }} /></div>
+                </div>
+                <Btn onClick={() => setEditState(s => ({ ...s, rotate: 0, flip: false, vignette: false }))} bg="#111" fg="#555" style={{ width: "100%", fontSize: 12 }}>↺ RESET</Btn>
               </>}
             </div>
           </div>
