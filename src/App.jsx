@@ -202,7 +202,7 @@ export default function SquadReel() {
   const fileRef = useRef(); const avatarRef = useRef(); const canvasRef = useRef(); const imgRef = useRef();
   const toast$ = (msg, type = "ok") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3200); };
   const F = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
-  const ac = profile?.accentColor || activeGroup?.color || "#ff4d00";
+  const ac = profile?.accent_color || activeGroup?.color || "#ff4d00";
   const unread = notifications.filter(n => !n.read).length;
 
   // ── DB Init ──────────────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ export default function SquadReel() {
     })();
   }, []);
 
-  const defaultProfile = () => ({ bio: "", avatar: "", accentColor: "#ff4d00", pinned_ids: [], approved_tag_ids: [] });
+  const defaultProfile = () => ({ bio: "", avatar: "", accent_color: "#ff4d00", pinned_ids: [], approved_tag_ids: [] });
 
   const saveSession = u => localStorage.setItem("sr_session", JSON.stringify({ username: u.username, passwordHash: u.password_hash }));
   const clearSession = () => localStorage.removeItem("sr_session");
@@ -674,7 +674,7 @@ export default function SquadReel() {
           {unread > 0 && <div style={{ position: "absolute", top: -4, right: -4, background: "#ff4d00", color: "#fff", fontSize: 10, fontWeight: 800, width: 16, height: 16, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", animation: "pulse 1.5s infinite" }}>{unread}</div>}
         </div>
         <div className="hov" onClick={() => openProfile(user.username)} style={{ display: "flex", alignItems: "center", gap: 8, background: B1, border: "1px solid #222", padding: "5px 12px", cursor: "pointer" }}>
-          <Avatar src={profile?.avatar} name={user.username} size={24} color={profile?.accentColor || "#ff4d00"} /><span style={{ fontSize: 13 }}>{user.display_name || user.username}</span>
+          <Avatar src={profile?.avatar} name={user.username} size={24} color={profile?.accent_color || "#ff4d00"} /><span style={{ fontSize: 13 }}>{user.display_name || user.username}</span>
         </div>
         <Btn onClick={async () => { clearSession(); setUser(null); setGroups([]); setProfile(null); setNotifications([]); setScreen("splash"); }} bg="#1a1a1a" fg="#666" style={{ fontSize: 12, padding: "6px 12px" }}>LOG OUT</Btn>
       </div>
@@ -832,28 +832,28 @@ export default function SquadReel() {
       {screen === "profile" && user && viewingProfile && (
         <main style={{ maxWidth: 860, margin: "0 auto", paddingBottom: 40 }}>
           <div style={{ background: "linear-gradient(180deg,#0d0d14 0%,#070709 100%)", padding: "32px 24px 0", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(ellipse at 50% 0%,${viewingProfile.accentColor || "#ff4d00"}18 0%,transparent 65%)`, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(ellipse at 50% 0%,${viewingProfile.accent_color || "#ff4d00"}18 0%,transparent 65%)`, pointerEvents: "none" }} />
             <div style={{ display: "flex", gap: 24, alignItems: "flex-start", position: "relative", flexWrap: "wrap" }}>
               <div style={{ flexShrink: 0 }}>
                 {viewingUser === user.username ? (
                   <div onClick={() => avatarRef.current?.click()} style={{ cursor: "pointer", position: "relative" }}>
-                    <Avatar src={profile?.avatar} name={user.username} size={96} color={profile?.accentColor || "#ff4d00"} />
-                    <div style={{ position: "absolute", bottom: 0, right: 0, background: profile?.accentColor || "#ff4d00", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>📷</div>
+                    <Avatar src={profile?.avatar} name={user.username} size={96} color={profile?.accent_color || "#ff4d00"} />
+                    <div style={{ position: "absolute", bottom: 0, right: 0, background: profile?.accent_color || "#ff4d00", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>📷</div>
                   </div>
-                ) : <Avatar src={viewingProfile.avatar} name={viewingUser} size={96} color={viewingProfile.accentColor || "#ff4d00"} />}
+                ) : <Avatar src={viewingProfile.avatar} name={viewingUser} size={96} color={viewingProfile.accent_color || "#ff4d00"} />}
               </div>
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ fontSize: 32, fontWeight: 900, lineHeight: 1 }}>{viewingUser === user.username ? (user.display_name || user.username) : viewingUser}</div>
                 {viewingUser === user.username ? (
                   <input defaultValue={profile?.bio || ""} placeholder="Add a bio..." onBlur={e => saveProfile({ bio: e.target.value })} style={{ background: "transparent", border: "none", borderBottom: "1px solid #333", color: "#888", padding: "6px 0", fontSize: 14, fontFamily: FF, outline: "none", marginTop: 8, width: "100%", maxWidth: 320 }} />
                 ) : <div style={{ color: "#777", fontSize: 14, fontFamily: FF, marginTop: 8 }}>{viewingProfile.bio || "No bio yet"}</div>}
-                {viewingUser === user.username && (() => { const s = myStats(); return (<div style={{ display: "flex", gap: 22, marginTop: 16, flexWrap: "wrap" }}>{[["POSTS", s.uploads], ["HIGHLIGHTS", s.highlights], ["REACTIONS", s.reactions], ["GROUPS", s.groups]].map(([l, v]) => (<div key={l} style={{ textAlign: "center" }}><div style={{ fontSize: 26, fontWeight: 900, color: profile?.accentColor || "#ff4d00", lineHeight: 1 }}>{v}</div><div style={{ fontSize: 11, color: "#555", letterSpacing: "0.08em", marginTop: 2 }}>{l}</div></div>))}</div>); })()}
-                {viewingUser === user.username && (<div style={{ marginTop: 14, display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 11, color: "#444", letterSpacing: "0.08em", marginRight: 4 }}>COLOR</span>{COLORS.map(c => <div key={c} onClick={() => saveProfile({ accentColor: c })} className="hov" style={{ width: 20, height: 20, background: c, borderRadius: "50%", cursor: "pointer", border: `2px solid ${(profile?.accentColor || "#ff4d00") === c ? "#fff" : "transparent"}` }} />)}</div>)}
+                {viewingUser === user.username && (() => { const s = myStats(); return (<div style={{ display: "flex", gap: 22, marginTop: 16, flexWrap: "wrap" }}>{[["POSTS", s.uploads], ["HIGHLIGHTS", s.highlights], ["REACTIONS", s.reactions], ["GROUPS", s.groups]].map(([l, v]) => (<div key={l} style={{ textAlign: "center" }}><div style={{ fontSize: 26, fontWeight: 900, color: profile?.accent_color || "#ff4d00", lineHeight: 1 }}>{v}</div><div style={{ fontSize: 11, color: "#555", letterSpacing: "0.08em", marginTop: 2 }}>{l}</div></div>))}</div>); })()}
+                {viewingUser === user.username && (<div style={{ marginTop: 14, display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 11, color: "#444", letterSpacing: "0.08em", marginRight: 4 }}>COLOR</span>{COLORS.map(c => <div key={c} onClick={() => saveProfile({ accent_color: c })} className="hov" style={{ width: 20, height: 20, background: c, borderRadius: "50%", cursor: "pointer", border: `2px solid ${(profile?.accent_color || "#ff4d00") === c ? "#fff" : "transparent"}` }} />)}</div>)}
               </div>
             </div>
             <div style={{ display: "flex", gap: 0, marginTop: 24, borderBottom: "1px solid #1a1a1a", overflowX: "auto" }}>
               {(viewingUser === user.username ? ["posts", "highlights", "tagged", "stats"] : ["posts", "highlights"]).map(t => (
-                <button key={t} className={`tb${profileTab === t ? " act" : ""}`} onClick={() => setProfileTab(t)} style={{ color: profileTab === t ? (profile?.accentColor || "#ff4d00") : "#555", borderBottomColor: profileTab === t ? (profile?.accentColor || "#ff4d00") : "transparent", position: "relative" }}>
+                <button key={t} className={`tb${profileTab === t ? " act" : ""}`} onClick={() => setProfileTab(t)} style={{ color: profileTab === t ? (profile?.accent_color || "#ff4d00") : "#555", borderBottomColor: profileTab === t ? (profile?.accent_color || "#ff4d00") : "transparent", position: "relative" }}>
                   {t === "posts" ? "📷 POSTS" : t === "highlights" ? "⭐ HIGHLIGHTS" : t === "tagged" ? "🏷️ TAGGED" : "📊 STATS"}
                   {t === "tagged" && pendingTagCount > 0 && <div style={{ position: "absolute", top: 8, right: 4, width: 7, height: 7, background: "#ff4d00", borderRadius: "50%" }} />}
                 </button>
@@ -869,7 +869,7 @@ export default function SquadReel() {
                   const isPinned = (profile?.pinned_ids || []).includes(item.id);
                   return (
                     <div key={item.id} className="ch fu" style={{ aspectRatio: "1", position: "relative", overflow: "hidden", animationDelay: `${i * 0.03}s` }} onClick={() => { setSelected(item); setScreen("lightbox"); }}>
-                      {item.type === "video" ? <><video src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}><div style={{ width: 28, height: 28, background: `${profile?.accentColor || "#ff4d00"}ee`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>▶</div></div></> : <img src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                      {item.type === "video" ? <><video src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}><div style={{ width: 28, height: 28, background: `${profile?.accent_color || "#ff4d00"}ee`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>▶</div></div></> : <img src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                       {isPinned && <div style={{ position: "absolute", top: 5, right: 5, fontSize: 13 }}>⭐</div>}
                       {(item.tags || []).length > 0 && <div style={{ position: "absolute", top: 5, left: 5, background: "rgba(0,0,0,0.7)", padding: "2px 6px", fontSize: 10, fontWeight: 700 }}>🏷️{(item.tags || []).length}</div>}
                       {totalR(item) > 0 && <div style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(0,0,0,0.7)", padding: "2px 5px", fontSize: 11 }}>🔥{totalR(item)}</div>}
@@ -886,9 +886,9 @@ export default function SquadReel() {
                   {pinned.length === 0 && <div style={{ textAlign: "center", padding: "50px 20px", color: "#333" }}><div style={{ fontSize: 42, marginBottom: 10 }}>⭐</div><div style={{ fontSize: 22, fontWeight: 900 }}>NO HIGHLIGHTS</div></div>}
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 10 }}>
                     {pinned.map((item, i) => (
-                      <div key={item.id} className="ch fu" style={{ background: BD, overflow: "hidden", border: `1px solid ${profile?.accentColor || "#ff4d00"}33`, animationDelay: `${i * 0.05}s` }}>
+                      <div key={item.id} className="ch fu" style={{ background: BD, overflow: "hidden", border: `1px solid ${profile?.accent_color || "#ff4d00"}33`, animationDelay: `${i * 0.05}s` }}>
                         <div style={{ aspectRatio: "16/9", position: "relative", overflow: "hidden", cursor: "pointer" }} onClick={() => { setSelected(item); setScreen("lightbox"); }}>
-                          {item.type === "video" ? <><video src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.38)" }}><div style={{ width: 34, height: 34, background: `${profile?.accentColor || "#ff4d00"}ee`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>▶</div></div></> : <img src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                          {item.type === "video" ? <><video src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.38)" }}><div style={{ width: 34, height: 34, background: `${profile?.accent_color || "#ff4d00"}ee`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>▶</div></div></> : <img src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                         </div>
                         <div style={{ padding: "8px 11px" }}>
                           <div style={{ fontWeight: 700, fontSize: 13 }}>{item.name}</div>
@@ -911,7 +911,7 @@ export default function SquadReel() {
                   {taggedMedia.map((item, i) => {
                     const isApproved = item.isApproved || (profile?.approved_tag_ids || []).includes(item.id);
                     return (
-                      <div key={item.id} className="fu" style={{ background: BD, border: `2px solid ${isApproved ? (profile?.accentColor || "#ff4d00") : "#222"}`, display: "flex", gap: 14, padding: 12, animationDelay: `${i * 0.05}s`, flexWrap: "wrap" }}>
+                      <div key={item.id} className="fu" style={{ background: BD, border: `2px solid ${isApproved ? (profile?.accent_color || "#ff4d00") : "#222"}`, display: "flex", gap: 14, padding: 12, animationDelay: `${i * 0.05}s`, flexWrap: "wrap" }}>
                         <div style={{ width: 110, aspectRatio: "16/9", flexShrink: 0, position: "relative", overflow: "hidden", cursor: "pointer" }} onClick={() => { setSelected(item); setScreen("lightbox"); }}>
                           {item.type === "video" ? <><video src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted /><div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}><span style={{ fontSize: 18 }}>▶</span></div></> : <img src={item.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                         </div>
@@ -919,7 +919,7 @@ export default function SquadReel() {
                           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{item.name}</div>
                           {isApproved ? (
                             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                              <div style={{ background: `${profile?.accentColor || "#ff4d00"}22`, border: `1px solid ${profile?.accentColor || "#ff4d00"}`, padding: "4px 12px", fontSize: 12, color: profile?.accentColor || "#ff4d00", fontWeight: 700 }}>⭐ IN HIGHLIGHTS</div>
+                              <div style={{ background: `${profile?.accent_color || "#ff4d00"}22`, border: `1px solid ${profile?.accent_color || "#ff4d00"}`, padding: "4px 12px", fontSize: 12, color: profile?.accent_color || "#ff4d00", fontWeight: 700 }}>⭐ IN HIGHLIGHTS</div>
                               <Btn onClick={() => { const a = (profile.approved_tag_ids || []).filter(id => id !== item.id); const p = (profile.pinned_ids || []).filter(id => id !== item.id); saveProfile({ approved_tag_ids: a, pinned_ids: p }); setTaggedMedia(prev => prev.map(m => m.id === item.id ? { ...m, isApproved: false } : m)); toast$("Removed"); }} bg="#1a1a1a" fg="#888" style={{ fontSize: 12, padding: "5px 12px" }}>REMOVE</Btn>
                             </div>
                           ) : (
@@ -935,7 +935,7 @@ export default function SquadReel() {
                 </div>
               </div>
             )}
-            {profileTab === "stats" && viewingUser === user.username && !loading && (() => { const s = myStats(); return (<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 12 }}>{[["📤", "TOTAL UPLOADS", s.uploads, "Files you've shared"], ["⭐", "HIGHLIGHTS", s.highlights, "Pinned to profile"], ["🔥", "REACTIONS", s.reactions, "Received on posts"], ["👥", "GROUPS", s.groups, "Member of"]].map(([icon, label, val, desc]) => (<div key={label} className="fu" style={{ background: BD, border: `1px solid ${profile?.accentColor || "#ff4d00"}22`, padding: "20px 18px" }}><div style={{ fontSize: 28, marginBottom: 6 }}>{icon}</div><div style={{ fontSize: 38, fontWeight: 900, color: profile?.accentColor || "#ff4d00", lineHeight: 1 }}>{val}</div><div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", marginTop: 4 }}>{label}</div><div style={{ fontSize: 11, color: "#555", fontFamily: FF, marginTop: 3 }}>{desc}</div></div>))}</div>); })()}
+            {profileTab === "stats" && viewingUser === user.username && !loading && (() => { const s = myStats(); return (<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 12 }}>{[["📤", "TOTAL UPLOADS", s.uploads, "Files you've shared"], ["⭐", "HIGHLIGHTS", s.highlights, "Pinned to profile"], ["🔥", "REACTIONS", s.reactions, "Received on posts"], ["👥", "GROUPS", s.groups, "Member of"]].map(([icon, label, val, desc]) => (<div key={label} className="fu" style={{ background: BD, border: `1px solid ${profile?.accent_color || "#ff4d00"}22`, padding: "20px 18px" }}><div style={{ fontSize: 28, marginBottom: 6 }}>{icon}</div><div style={{ fontSize: 38, fontWeight: 900, color: profile?.accent_color || "#ff4d00", lineHeight: 1 }}>{val}</div><div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", marginTop: 4 }}>{label}</div><div style={{ fontSize: 11, color: "#555", fontFamily: FF, marginTop: 3 }}>{desc}</div></div>))}</div>); })()}
           </div>
         </main>
       )}
