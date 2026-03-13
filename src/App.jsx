@@ -5,15 +5,16 @@ const SUPABASE_URL = "https://hhmjoeoushxpasatklry.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhobWpvZW91c2h4cGFzYXRrbHJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNjk2NTIsImV4cCI6MjA4ODk0NTY1Mn0.Pw6Wd8MiehLURtlpCMQA-WWt8xYfKR47gcLBbcHAweI";
 
 const sb = async (path, opts = {}) => {
+  const { headers: extraHeaders, prefer, ...restOpts } = opts;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     headers: {
       "apikey": SUPABASE_KEY,
       "Authorization": `Bearer ${SUPABASE_KEY}`,
       "Content-Type": "application/json",
-      "Prefer": opts.prefer || "return=representation",
-      ...opts.headers
+      "Prefer": prefer || "return=representation",
+      ...(extraHeaders || {})
     },
-    ...opts
+    ...restOpts
   });
   if (!res.ok) {
     const err = await res.text();
@@ -42,12 +43,11 @@ const DB = {
     const rows = await sb(`${table}?${params}`, { method: "PATCH", body: JSON.stringify(data), prefer: "return=representation" });
     return Array.isArray(rows) ? rows[0] : rows;
   },
-  upsert: async (table, data, onConflict) => {
-    const rows = await sb(`${table}`, {
+  upsert: async (table, data) => {
+    const rows = await sb(table, {
       method: "POST",
       body: JSON.stringify(data),
-      prefer: "return=representation",
-      headers: { "Prefer": `resolution=merge-duplicates,return=representation` }
+      prefer: "resolution=merge-duplicates,return=representation"
     });
     return Array.isArray(rows) ? rows[0] : rows;
   },
@@ -210,7 +210,7 @@ export default function SquadReel() {
     (async () => {
       try {
         // Test connection
-        await sb("users?limit=1", { headers: { "Prefer": "count=none" } });
+        await sb("users?limit=1", { prefer: "count=none" });
         setDbReady(true);
         // Auto-login
         try {
