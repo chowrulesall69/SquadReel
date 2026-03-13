@@ -750,9 +750,9 @@ export default function SquadReel() {
               <Inp placeholder="Username" value={form.username || ""} onChange={F("username")} style={{ color: "#111" }} />
               <PwdInp value={form.password || ""} onChange={F("password")} />
               <div style={{ color: "#555", fontSize: 11, fontFamily: FF, letterSpacing: "0.08em", marginTop: 4 }}>ACCOUNT RECOVERY — SET A SECURITY QUESTION</div>
-              <select value={form.secQuestion || ""} onChange={F("secQuestion")} style={{ width: "100%", background: B1, border: "1px solid #2a2a2a", color: form.secQuestion ? "#111" : "#888", padding: "11px 14px", fontSize: 13, outline: "none", fontFamily: FF }}>
-                <option value="" disabled>Choose a security question...</option>
-                {SECURITY_QUESTIONS.map(q => <option key={q} value={q} style={{ color: "#111" }}>{q}</option>)}
+              <select value={form.secQuestion || ""} onChange={F("secQuestion")} style={{ width: "100%", background: "#fff", border: "1px solid #2a2a2a", color: "#111", padding: "11px 14px", fontSize: 13, outline: "none", fontFamily: FF }}>
+                <option value="" disabled style={{ color: "#888" }}>Choose a security question...</option>
+                {SECURITY_QUESTIONS.map(q => <option key={q} value={q} style={{ color: "#111", background: "#fff" }}>{q}</option>)}
               </select>
               <Inp placeholder="Your answer (remember this!)" value={form.secAnswer || ""} onChange={F("secAnswer")} style={{ color: "#111" }} />
               {loading ? <div style={{ padding: 12, textAlign: "center" }}><Spin /></div> : <Btn onClick={register} style={{ width: "100%", fontSize: 17, padding: "13px", marginTop: 4 }}>CREATE ACCOUNT →</Btn>}
