@@ -126,7 +126,7 @@ const Btn = ({ children, onClick, bg = "#ff4d00", fg = "#fff", style = {}, ...p 
   <button onClick={onClick} className="hov" style={{ border: "none", background: bg, color: fg, fontFamily: FN, fontSize: 15, letterSpacing: "0.08em", padding: "9px 18px", cursor: "pointer", ...style }} {...p}>{children}</button>
 );
 const Inp = ({ style = {}, ...p }) => (
-  <input style={{ width: "100%", background: B1, border: "1px solid #2a2a2a", color: "#111", padding: "11px 14px", fontSize: 15, outline: "none", fontFamily: FF, ...style }} {...p} />
+  <input style={{ width: "100%", background: "#fff", border: "1px solid #2a2a2a", color: "#111", padding: "11px 14px", fontSize: 15, outline: "none", fontFamily: FF, ...style }} {...p} />
 );
 const Avatar = ({ src, name, size = 36, color = "#ff4d00", onClick }) => (
   <div onClick={onClick} style={{ width: size, height: size, borderRadius: "50%", background: src ? "transparent" : `linear-gradient(135deg,${color},${color}88)`, border: `2px solid ${color}`, overflow: "hidden", flexShrink: 0, cursor: onClick ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center" }}>
