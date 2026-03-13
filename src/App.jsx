@@ -199,6 +199,7 @@ export default function SquadReel() {
   const [dbError, setDbError] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
 
+  const dragRef = useRef(null);
   const fileRef = useRef(); const avatarRef = useRef(); const canvasRef = useRef(); const imgRef = useRef();
   const toast$ = (msg, type = "ok") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3200); };
   const F = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -1171,11 +1172,47 @@ export default function SquadReel() {
             ))}
           </div>
           <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 14, background: "#050507", position: "relative" }}>
-              <div style={{ position: "relative", display: "inline-block" }}>
+            <div data-editarea="1" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 14, background: "#050507", position: "relative" }}>
+              <div style={{ position: "relative", display: "inline-block" }}
+                onMouseMove={e => {
+                  if (!e.buttons || !dragRef.current) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = Math.min(95, Math.max(5, ((e.clientX - rect.left) / rect.width) * 100));
+                  const y = Math.min(95, Math.max(5, ((e.clientY - rect.top) / rect.height) * 100));
+                  const { type, id } = dragRef.current;
+                  if (type === "sticker") setStickerOverlays(prev => prev.map(s => s.id === id ? { ...s, x, y } : s));
+                  if (type === "text") setTextOverlays(prev => prev.map(t => t.id === id ? { ...t, x, y } : t));
+                }}
+                onMouseUp={() => { dragRef.current = null; }}
+                onMouseLeave={() => { dragRef.current = null; }}
+                onTouchMove={e => {
+                  if (!dragRef.current) return;
+                  e.preventDefault();
+                  const touch = e.touches[0];
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = Math.min(95, Math.max(5, ((touch.clientX - rect.left) / rect.width) * 100));
+                  const y = Math.min(95, Math.max(5, ((touch.clientY - rect.top) / rect.height) * 100));
+                  const { type, id } = dragRef.current;
+                  if (type === "sticker") setStickerOverlays(prev => prev.map(s => s.id === id ? { ...s, x, y } : s));
+                  if (type === "text") setTextOverlays(prev => prev.map(t => t.id === id ? { ...t, x, y } : t));
+                }}
+                onTouchEnd={() => { dragRef.current = null; }}
+              >
                 <img ref={imgRef} src={selected.src} alt="edit" crossOrigin="anonymous" style={{ maxWidth: "100%", maxHeight: "calc(100vh - 200px)", objectFit: "contain", filter: getFilter(editState, activeFilter), transform: `rotate(${editState.rotate}deg) scaleX(${editState.flip ? -1 : 1})`, transition: "filter 0.08s,transform 0.2s", display: "block" }} />
-                {textOverlays.map(t => <div key={t.id} onClick={() => setEditingTextId(t.id === editingTextId ? null : t.id)} style={{ position: "absolute", left: `${t.x}%`, top: `${t.y}%`, transform: "translate(-50%,-50%)", fontFamily: FN, fontSize: t.size, color: t.color, background: t.bg ? "rgba(0,0,0,0.5)" : "transparent", padding: t.bg ? "4px 10px" : "0", cursor: "move", userSelect: "none", whiteSpace: "nowrap", letterSpacing: "0.06em", border: editingTextId === t.id ? `1px dashed ${ac}` : "1px dashed transparent", zIndex: 10 }}>{t.text}</div>)}
-                {stickerOverlays.map(s => <div key={s.id} style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, transform: "translate(-50%,-50%)", fontSize: s.size, cursor: "move", userSelect: "none", zIndex: 10 }}>{s.emoji}</div>)}
+                {textOverlays.map(t => (
+                  <div key={t.id}
+                    onMouseDown={e => { e.stopPropagation(); dragRef.current = { type: "text", id: t.id }; setEditingTextId(t.id); }}
+                    onTouchStart={e => { e.stopPropagation(); dragRef.current = { type: "text", id: t.id }; setEditingTextId(t.id); }}
+                    style={{ position: "absolute", left: `${t.x}%`, top: `${t.y}%`, transform: "translate(-50%,-50%)", fontFamily: FN, fontSize: t.size, color: t.color, background: t.bg ? "rgba(0,0,0,0.5)" : "transparent", padding: t.bg ? "4px 10px" : "0", cursor: "grab", userSelect: "none", whiteSpace: "nowrap", letterSpacing: "0.06em", border: editingTextId === t.id ? `1px dashed ${ac}` : "1px dashed transparent", zIndex: 10 }}
+                  >{t.text}</div>
+                ))}
+                {stickerOverlays.map(s => (
+                  <div key={s.id}
+                    onMouseDown={e => { e.stopPropagation(); dragRef.current = { type: "sticker", id: s.id }; }}
+                    onTouchStart={e => { e.stopPropagation(); dragRef.current = { type: "sticker", id: s.id }; }}
+                    style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, transform: "translate(-50%,-50%)", fontSize: s.size, cursor: "grab", userSelect: "none", zIndex: 10, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }}
+                  >{s.emoji}</div>
+                ))}
               </div>
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
